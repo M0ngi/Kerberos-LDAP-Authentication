@@ -1,0 +1,197 @@
+version: '2'
+services:
+  dns:
+    build: ./dns/
+    image: dns
+    container_name: dns
+    domainname: insat.tn
+    ports:
+      # - 53:53/tcp
+      # - 53:53/udp
+      # - 953:953/tcp
+      - 53/tcp
+      - 53/udp
+      - 953/tcp
+    networks:
+      insat.tn:
+        ipv4_address: 172.50.0.2
+        aliases:
+          - dns.insat.tn
+  ldap:
+    build: ./ldap/
+    image: ldap_server
+    container_name: ldap
+    command: --loglevel debug
+    dns: 172.50.0.2
+    domainname: insat.tn
+    dns_search: .
+    depends_on:
+      - dns
+    environment:
+      - LDAP_ORGANISATION=insat
+      - LDAP_DOMAIN=ldap.insat.tn
+      - "LDAP_BASE_DN=dc=ldap,dc=insat,dc=tn"
+      - LDAP_ADMIN_PASSWORD=insat123
+
+      - LDAP_TLS_VERIFY_CLIENT=yes
+      - LDAP_TLS=true
+      - LDAP_TLS_CRT_FILENAME=cert-srv.pem
+      - LDAP_TLS_KEY_FILENAME=priv-srv.pem
+      - LDAP_TLS_CA_CRT_FILENAME=cert-ca.pem
+
+      - LDAP_READONLY_USER=true
+      - LDAP_READONLY_USER_USERNAME=readonly
+      - LDAP_READONLY_USER_PASSWORD=readonly
+    ports:
+      - 389:389
+      - 636:636
+    networks:
+      insat.tn:
+        ipv4_address: 172.50.0.6
+  ssh:
+    build: ./ssh/
+    container_name: ssh
+    image: ssh
+    privileged: true
+    dns: 172.50.0.2
+    dns_search: .
+    hostname: ssh
+    domainname: insat.tn
+    # volumes:
+    #   - /dev/log:/dev/log
+    ports:
+      - 2222:2222
+    networks:
+      insat.tn:
+        ipv4_address: 172.50.0.5
+    depends_on:
+      - ldap
+    environment:
+      - PORT=2222
+      - ALLOWED_GROUPS=teachers admins
+
+      - LDAP_HOST=ldap.insat.tn
+      - LDAP_URL=ldaps://ldap.insat.tn:636
+      - "LDAP_BASE_DN=dc=ldap,dc=insat,dc=tn"
+      - "LDAP_BindDN=cn=readonly"
+      - LDAP_BindPassword=readonly
+      - "LDAP_USERS_DN=ou=users"
+
+      - REALM=INSAT.TN
+      - KDC_DOMAIN=kdc.insat.tn
+      - ADMIN_SERVER_DOMAIN=kdc.insat.tn
+  web:
+    build: ./apache/
+    container_name: web
+    image: web
+    dns: 172.50.0.2
+    dns_search: .
+    domainname: insat.tn
+    ports:
+      - 80:80
+    networks:
+      insat.tn:
+        ipv4_address: 172.50.0.4
+    depends_on:
+      - ldap
+    environment:
+      - LDAP_BindDN=readonly
+      - LDAP_BindPassword=readonly
+      - LDAP_URL=ldaps://ldap.insat.tn:636
+      - "LDAP_BASE_DN=dc=ldap,dc=insat,dc=tn"
+      - APACHE_LOG_DIR=/tmp/
+  openvpn:
+    build: ./openvpn/
+    container_name: openvpn
+    image: openvpn
+    privileged: true
+    dns: 172.50.0.2
+    dns_search: .
+    domainname: insat.tn
+    networks:
+      insat.tn:
+        ipv4_address: 172.50.0.3
+    depends_on:
+      - ldap
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - 1194:1194/udp
+    environment:
+      - PORT=1194
+      - VERBOSITY_LEVEL=1
+
+      - LDAP_URL=ldaps://ldap.insat.tn:636
+      - "LDAP_BASE_DN=dc=ldap,dc=insat,dc=tn"
+      - "LDAP_BindDN=cn=readonly"
+      - LDAP_BindPassword=readonly
+      - "LDAP_USERS_DN=ou=users"
+      - "LDAP_GROUP_DN=OU=groups"
+
+      - DNS_SERVER1=172.50.0.2
+      - DNS_SERVER2=8.8.8.8
+  kdc:
+    build: ./kdc/
+    container_name: kdc
+    image: kdc
+    dns: 172.50.0.2
+    dns_search: .
+    hostname: kdc.insat.tn
+    domainname: insat.tn
+    depends_on:
+      - ldap
+      - ssh
+    ports:
+      - 750:750/tcp
+      - 88:88/tcp
+      - 750:750/udp
+      - 88:88/udp
+    environment:
+      - REALM=INSAT.TN
+      - MASTER_DB_PASS=krb5
+      - KDC_DOMAIN=kdc.insat.tn
+      - ADMIN_SERVER_DOMAIN=kdc.insat.tn
+    networks:
+      insat.tn:
+        ipv4_address: 172.50.0.7
+  client:
+    build: ./client/
+    image: client
+    container_name: client
+    hostname: client
+    domainname: insat.tn
+    dns: 172.50.0.2
+    dns_search: .
+    environment:
+      - REALM=INSAT.TN
+      - KDC_DOMAIN=kdc.insat.tn
+      - ADMIN_SERVER_DOMAIN=kdc.insat.tn
+    networks:
+      insat.tn:
+        ipv4_address: 172.50.0.8
+  student1:
+    build: ./student1/
+    image: student1
+    container_name: student1
+    dns: 172.50.0.2
+    dns_search: .
+    depends_on:
+      - dns
+    networks:
+      insat.tn:
+        ipv4_address: 172.50.0.20
+  teacher1:
+    build: ./teacher1/
+    image: teacher1
+    container_name: teacher1
+    dns: 172.50.0.2
+    dns_search: .
+    depends_on:
+      - dns
+    networks:
+      insat.tn:
+        ipv4_address: 172.50.0.21
+
+networks:
+  insat.tn:
+    external: true

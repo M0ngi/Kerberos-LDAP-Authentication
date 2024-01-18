@@ -1,0 +1,3 @@
+root/admin@${REALM}:123456
+host/ssh.insat.tn@${REALM}:123456
+user@${REALM}:123456

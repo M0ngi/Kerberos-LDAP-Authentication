@@ -1,0 +1,4 @@
+TLS_REQCERT try
+TLS_CACERT      /certs/cert-ca.pem
+TLS_CERT        /certs/cert-student1.pem
+TLS_KEY         /certs/priv-student1.pem

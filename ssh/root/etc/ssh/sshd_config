@@ -1,0 +1,31 @@
+# Disable login for root account.
+PermitRootLogin no
+
+# Enable PAM modules. This allows SSH to
+# use LDAP authentication, which would be
+# implemented as a PAM module & used during
+# authentication process.
+UsePAM yes
+
+# Helpful for debugging
+# LogLevel DEBUG3
+
+# Specify the port to use for SSH service
+Port ${PORT} # PORT=2222
+
+# Specify the groups allowed to login
+AllowGroups ${ALLOWED_GROUPS} user # ALLOWED_GROUPS="admins teachers"
+
+# Enable public key authentication
+PubkeyAuthentication yes
+
+# Use a bash script to lookup authorized public keys.
+# This script will use LDAP to fetch authorized keys.
+AuthorizedKeysCommand /ldap_lookup.sh %u
+
+# The above script will be ran as "user"
+AuthorizedKeysCommandUser user
+
+# Kerberos
+GSSAPIAuthentication yes
+GSSAPICleanupCredentials yes

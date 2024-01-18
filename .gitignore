@@ -1,0 +1,4 @@
+/ldap/ldif/2-init-users.ldif
+*.pem
+*.csr
+*.ovpn

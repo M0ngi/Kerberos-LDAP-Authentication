@@ -1,0 +1,4 @@
+zone "insat.tn" {
+  type master;
+  file "/etc/bind/zones/db.insat.tn";
+};

@@ -1,0 +1,20 @@
+$TTL    1d ; default expiration time (in seconds) of all RRs without their own TTL value
+@       IN      SOA     ns1.insat.tn. root.insat.tn. (
+                  3      ; Serial
+                  1d     ; Refresh
+                  1h     ; Retry
+                  1w     ; Expire
+                  1h     ; Negative Cache TTL
+)
+
+; name servers - NS records
+     IN      NS      ns1.insat.tn.
+
+; name servers - A records
+ns1.insat.tn.             IN      A      172.50.0.2
+
+openvpn.insat.tn.        IN      A      172.50.0.3
+web.insat.tn.        IN      A      172.50.0.4
+ssh.insat.tn.        IN      A      172.50.0.5
+ldap.insat.tn.        IN      A      172.50.0.6
+kdc.insat.tn.        IN      A      172.50.0.7

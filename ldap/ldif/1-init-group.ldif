@@ -1,0 +1,38 @@
+#
+dn: ou=users,{{ LDAP_BASE_DN }}
+objectClass: organizationalUnit
+ou: users
+description: Users organizational unit
+
+#
+dn: ou=groups,{{ LDAP_BASE_DN }}
+objectClass: organizationalUnit
+ou: groups
+description: Groups organizational unit
+
+# Define the entry for the students group
+dn: cn=students,ou=groups,{{ LDAP_BASE_DN }}
+objectClass: posixGroup
+cn: students
+memberUid: student1
+gidNumber: 10000
+
+# Define the entry for the teachers group
+dn: cn=teachers,ou=groups,{{ LDAP_BASE_DN }}
+objectClass: posixGroup
+memberUid: teacher1
+cn: teachers
+gidNumber: 10001
+
+# Define the entry for the admins group
+dn: cn=admins,ou=groups,{{ LDAP_BASE_DN }}
+objectClass: posixGroup
+memberUid: kdc
+cn: admins
+gidNumber: 10002
+
+# Define the entry for the teachers group
+dn: cn=others,ou=groups,{{ LDAP_BASE_DN }}
+objectClass: posixGroup
+cn: others
+gidNumber: 10003
